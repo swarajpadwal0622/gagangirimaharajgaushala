@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gaushala Live Software V5</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --line:#e5eaf2;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --primary:#2563eb;
+      --primary2:#1d4ed8;
+      --danger:#dc2626;
+      --success:#16a34a;
+      --warning:#ca8a04;
+      --shadow:0 12px 32px rgba(0,0,0,.08);
+      --radius:18px;
+      --sidebar:270px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
+    body{background:var(--bg);color:var(--text)}
+    .hidden{display:none!important}
+    a{text-decoration:none;color:inherit}
+    button,input,select,textarea{font:inherit}
+    img{max-width:100%}
+
+    /* LOGIN */
+    .auth-wrap{
+      min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+      background:linear-gradient(135deg,#eff6ff,#f8fafc);
+    }
+    .auth-card{
+      width:100%;max-width:430px;background:var(--card);border-radius:28px;box-shadow:var(--shadow);padding:28px;
+      border:1px solid var(--line)
+    }
+    .auth-title{font-size:30px;font-weight:800;text-align:center;margin-bottom:6px}
+    .auth-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:22px}
+    .auth-tabs{display:flex;gap:10px;margin-bottom:18px}
+    .auth-tab{
+      flex:1;padding:12px;border:none;border-radius:14px;background:#eef2ff;cursor:pointer;font-weight:700
+    }
+    .auth-tab.active{background:var(--primary);color:#fff}
+    label{display:block;font-size:14px;font-weight:700;margin:12px 0 7px}
+    input,select,textarea{
+      width:100%;padding:12px 14px;border:1px solid #d8e0ea;border-radius:14px;background:#fff;outline:none
+    }
+    input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+    .btn{
+      border:none;border-radius:14px;padding:12px 16px;cursor:pointer;font-weight:800;transition:.2s
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:var(--primary2)}
+    .btn-soft{background:#eef2ff;color:#1e3a8a}
+    .btn-danger{background:#fee2e2;color:#991b1b}
+    .btn-success{background:#dcfce7;color:#166534}
+    .btn-warning{background:#fef9c3;color:#854d0e}
+    .btn-block{width:100%;margin-top:18px}
+    .msg{margin-top:14px;padding:12px;border-radius:12px;font-size:14px;display:none}
+    .msg.ok{display:block;background:#e8f7ee;color:#166534}
+    .msg.err{display:block;background:#fdecec;color:#b91c1c}
+
+    /* APP */
+    .app{display:none;min-height:100vh}
+    .layout{display:flex;min-height:100vh}
+    .sidebar{
+      width:var(--sidebar);background:#0f172a;color:#fff;position:fixed;left:0;top:0;bottom:0;padding:20px 14px;
+      overflow-y:auto;border-right:1px solid rgba(255,255,255,.08)
+    }
+    .brand{
+      padding:12px 14px 20px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:18px
+    }
+    .brand h1{font-size:22px;font-weight:900;line-height:1.2}
+    .brand p{font-size:13px;color:#cbd5e1;margin-top:6px}
+    .nav{display:flex;flex-direction:column;gap:8px}
+    .nav-btn{
+      width:100%;text-align:left;padding:13px 14px;border:none;border-radius:14px;background:transparent;color:#e2e8f0;
+      cursor:pointer;font-weight:700
+    }
+    .nav-btn:hover{background:rgba(255,255,255,.08)}
+    .nav-btn.active{background:#1d4ed8;color:#fff}
+    .sidebar-footer{
+      margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)
+    }
+
+    .main{
+      margin-left:var(--sidebar);width:calc(100% - var(--sidebar));padding:20px;
+    }
+    .topbar{
+      background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 18px;box-shadow:var(--shadow);
+      display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px
+    }
+    .top-left h2{font-size:24px;font-weight:900}
+    .top-left p{font-size:13px;color:var(--muted);margin-top:4px}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .page{display:none}
+    .page.active{display:block}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+    .card{
+      background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px
+    }
+    .stat h3{font-size:14px;color:var(--muted);margin-bottom:8px}
+    .stat p{font-size:30px;font-weight:900}
+    .panel-title{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px
+    }
+    .panel-title h3{font-size:22px;font-weight:900}
+    .panel-title p{font-size:13px;color:var(--muted);margin-top:4px}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+    .full{grid-column:1/-1}
+    .table-wrap{
+      overflow:auto;border:1px solid var(--line);border-radius:16px;margin-top:14px;background:#fff
+    }
+    table{width:100%;border-collapse:collapse;min-width:900px}
+    th,td{padding:12px;border-bottom:1px solid #eef2f7;text-align:left;vertical-align:top;font-size:14px}
+    th{background:#f8fafc;font-weight:900;position:sticky;top:0;z-index:1}
+    tr:hover td{background:#fcfdff}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .mini{font-size:12px;color:var(--muted);margin-top:4px}
+    .badge{
+      display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;background:#eef2ff;color:#1e3a8a
+    }
+    .img-thumb{
+      width:58px;height:58px;border-radius:14px;object-fit:cover;border:1px solid #d8dee8;background:#fff
+    }
+    .quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+    .quick-btn{
+      padding:16px;border-radius:18px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:900;box-shadow:var(--shadow)
+    }
+    .quick-btn:hover{transform:translateY(-1px)}
+    .list-box{display:flex;flex-direction:column;gap:10px}
+    .list-item{
+      display:flex;justify-content:space-between;gap:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#fff
+    }
+
+    /* MODAL */
+    .modal{
+      position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:99
+    }
+    .modal-content{
+      width:100%;max-width:950px;max-height:92vh;overflow:auto;background:#fff;border-radius:24px;padding:22px;box-shadow:var(--shadow)
+    }
+    .close-btn{float:right}
+
+    /* MOBILE */
+    .menu-toggle{
+      display:none;border:none;background:#0f172a;color:#fff;padding:10px 14px;border-radius:12px;font-weight:800
+    }
+    .mobile-overlay{
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40
+    }
+
+    @media (max-width:980px){
+      .menu-toggle{display:inline-block}
+      .sidebar{
+        transform:translateX(-100%);transition:.25s;z-index:50
+      }
+      .sidebar.open{transform:translateX(0)}
+      .mobile-overlay.show{display:block}
+      .main{margin-left:0;width:100%;padding:14px}
+      .top-left h2{font-size:20px}
+      .stat p{font-size:26px}
+      .card{padding:16px}
+      .topbar{padding:14px}
+    }
+
+    @media print{
+      body *{visibility:hidden}
+      #printArea,#printArea *{visibility:visible}
+      #printArea{position:absolute;left:0;top:0;width:100%;padding:20px;background:#fff}
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="auth-wrap" id="authWrap">
+  <div class="auth-card">
+    <div class="auth-title">Gaushala Live Software</div>
+    <div class="auth-sub">Multi-user • Live shared data • Chrome based</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="loginTab">Login</button>
+      <button class="auth-tab" id="signupTab">Register</button>
+    </div>
+
+    <label>Email</label>
+    <input type="email" id="email" placeholder="Enter email" />
+
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter password" />
+
+    <button class="btn btn-primary btn-block" id="mainAuthBtn">Login</button>
+    <div class="msg" id="authMsg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="mobile-overlay" id="mobileOverlay" onclick="toggleSidebar(false)"></div>
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <h1>Gaushala<br>Management</h1>
+        <p>Live Office Dashboard</p>
+      </div>
+
+      <div class="nav">
+        <button class="nav-btn active" onclick="showPage('dashboard', this)">🏠 Dashboard</button>
+        <button class="nav-btn" onclick="showPage('animals', this)">🐄 Animals Register</button>
+        <button class="nav-btn" onclick="showPage('history', this)">📜 Animal History</button>
+        <button class="nav-btn" onclick="showPage('health', this)">💊 Health Register</button>
+        <button class="nav-btn" onclick="showPage('expenses', this)">💵 Expenses / Bills</button>
+        <button class="nav-btn" onclick="showPage('donations', this)">🙏 Donations</button>
+        <button class="nav-btn" onclick="showPage('milk', this)">🥛 Milk Register</button>
+        <button class="nav-btn" onclick="showPage('reports', this)">📊 Reports / Export</button>
+        <button class="nav-btn" onclick="showPage('settings', this)">⚙ Settings</button>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-danger" style="width:100%" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="topbar">
+        <div class="top-left">
+          <button class="menu-toggle" onclick="toggleSidebar(true)">☰ Menu</button>
+          <h2 id="pageTitle">Dashboard</h2>
+          <p id="pageSub">Overview of gaushala live records</p>
+        </div>
+        <div class="top-actions">
+          <button class="btn btn-soft" onclick="refreshAll()">Refresh</button>
+          <button class="btn btn-success" onclick="showPageById('animals')">+ Add Animal</button>
+          <button class="btn btn-warning" onclick="showPageById('donations')">+ Add Donation</button>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <section class="page active" id="dashboard">
+        <div class="grid">
+          <div class="card stat"><h3>एकूण जनावरे</h3><p id="totalAnimals">0</p></div>
+          <div class="card stat"><h3>गाय</h3><p id="cowCount">0</p></div>
+          <div class="card stat"><h3>बैल</h3><p id="bullCount">0</p></div>
+          <div class="card stat"><h3>वासरे</h3><p id="calfCount">0</p></div>
+          <div class="card stat"><h3>एकूण खर्च</h3><p id="totalExpense">₹0</p></div>
+          <div class="card stat"><h3>एकूण देणगी</h3><p id="totalDonation">₹0</p></div>
+          <div class="card stat"><h3>एकूण दूध</h3><p id="totalMilk">0 L</p></div>
+          <div class="card stat"><h3>आजची तारीख</h3><p id="todayDisplay">--</p></div>
+        </div>
+
+        <div class="grid" style="margin-top:18px">
+          <div class="card">
+            <div class="panel-title">
+              <div>
+                <h3>Quick Actions</h3>
+                <p>Common entries quickly</p>
+              </div>
+            </div>
+            <div class="quick-grid">
+              <button class="quick-btn" onclick="showPageById('animals')">+ Add Animal</button>
+              <button class="quick-btn" onclick="showPageById('health')">+ Health Entry</button>
+              <button class="quick-btn" onclick="showPageById('expenses')">+ Add Expense</button>
+              <button class="quick-btn" onclick="showPageById('donations')">+ Add Donation</button>
+              <button class="quick-btn" onclick="showPageById('milk')">+ Add Milk Record</button>
+              <button class="quick-btn" onclick="showPageById('reports')">Export Reports</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="panel-title">
+              <div>
+                <h3>Recent Animals</h3>
+                <p>Latest added records</p>
+              </div>
+            </div>
+            <div class="list-box" id="recentAnimalsBox"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANIMALS -->
+      <section class="page" id="animals">
+        <div class="card">
+          <div class="panel-title">
+            <div>
+              <h3>Animals Register</h3>
+              <p>Add / edit all animal records</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div><label>Ear Tag No *</label><input id="ear_tag" placeholder="उदा. A101"></div>
+            <div><label>Animal Name *</label><input id="animal_name" placeholder="उदा. गौरी"></div>
+            <div>
+              <label>Type</label>
+              <select id="animal_type">
+                <option value="Cow">Cow</option>
+                <option value="Bull">Bull</option>
+                <option value="Calf">Calf</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label>Gender</label>
+              <select id="gender">
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+              </select>
+            </div>
+            <div><label>Age</label><input id="age" placeholder="उदा. 3 years"></div>
+            <div><label>Breed</label><input id="breed" placeholder="उदा. Gir"></div>
+            <div><label>Color</label><input id="color" placeholder="उदा. Brown"></div>
+            <div><label>Weight</label><input id="weight" placeholder="उदा. 320 kg"></div>
+            <div>
+              <label>Status</label>
+              <select id="status">
+                <option value="Healthy">Healthy</option>
+                <option value="Sick">Sick</option>
+                <option value="Pregnant">Pregnant</option>
+                <option value="Sold">Sold</option>
+                <option value="Dead">Dead</option>
+              </select>
+            </div>
+            <div><label>Photo URL</label><input id="photo_url" placeholder="Paste image link"></div>
+            <div class="full"><label>Notes</label><textarea id="notes" rows="3" placeholder="Extra details"></textarea></div>
+          </div>
+
+          <input type="hidden" id="edit_id">
+          <div class="actions" style="margin-top:16px">
+            <button class="btn btn-primary" onclick="saveAnimal()">Save Animal</button>
+            <button class="btn btn-soft" onclick="clearAnimalForm()">Clear</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="panel-title">
+            <div>
+              <h3>Animal List</h3>
+              <p>Search and filter all animals</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div><label>Search</label><input id="searchBox" placeholder="Ear tag / name / type" oninput="renderAnimals()"></div>
+            <div>
+              <label>Filter Type</label>
+              <select id="filterType" onchange="renderAnimals()">
+                <option value="">All</option>
+                <option value="Cow">Cow</option>
+                <option value="Bull">Bull</option>
+                <option value="Calf">Calf</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label>Filter Status</label>
+              <select id="filterStatus" onchange="renderAnimals()">
+                <option value="">All</option>
+                <option value="Healthy">Healthy</option>
+                <option value="Sick">Sick</option>
+                <option value="Pregnant">Pregnant</option>
+                <option value="Sold">Sold</option>
+                <option value="Dead">Dead</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Photo</th>
+                  <th>Ear Tag</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Gender</th>
+                  <th>Age</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="animalTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- HISTORY -->
+      <section class="page" id="history">
+        <div class="card">
+          <div class="panel-title"><div><h3>Animal History</h3><p>Maintain all animal event history</p></div></div>
+          <div class="form-grid">
+            <div><label>Select Animal</label><select id="history_animal"></select></div>
+            <div><label>Date</label><input type="date" id="history_date"></div>
+            <div><label>Title</label><input id="history_title" placeholder="उदा. Purchased / Shifted / Calving"></div>
+            <div class="full"><label>Details</label><textarea id="history_details" rows="3"></textarea></div>
+          </div>
+          <div class="actions" style="margin-top:16px">
+            <button class="btn btn-primary" onclick="saveHistory()">Save History</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Animal</th><th>Title</th><th>Details</th><th>Action</th></tr></thead>
+              <tbody id="historyTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- HEALTH -->
+      <section class="page" id="health">
+        <div class="card">
+          <div class="panel-title"><div><h3>Health Register</h3><p>Medicine, treatment and doctor records</p></div></div>
+          <div class="form-grid">
+            <div><label>Select Animal</label><select id="health_animal"></select></div>
+            <div><label>Visit Date</label><input type="date" id="visit_date"></div>
+            <div><label>Treatment</label><input id="treatment"></div>
+            <div><label>Medicine</label><input id="medicine"></div>
+            <div><label>Doctor Name</label><input id="doctor_name"></div>
+            <div><label>Next Visit</label><input type="date" id="next_visit"></div>
+            <div class="full"><label>Notes</label><textarea id="health_notes" rows="3"></textarea></div>
+          </div>
+          <div class="actions" style="margin-top:16px">
+            <button class="btn btn-primary" onclick="saveHealth()">Save Health Record</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Animal</th><th>Treatment</th><th>Medicine</th><th>Doctor</th><th>Next Visit</th><th>Action</th></tr></thead>
+              <tbody id="healthTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- EXPENSES -->
+      <section class="page" id="expenses">
+        <div class="card">
+          <div class="panel-title"><div><h3>Expenses / Bills</h3><p>Track all gaushala expenses</p></div></div>
+          <div class="form-grid">
+            <div><label>Date</label><input type="date" id="expense_date"></div>
+            <div><label>Category</label><input id="expense_category" placeholder="Feed / Medicine / Labour"></div>
+            <div><label>Amount</label><input type="number" id="expense_amount" placeholder="0"></div>
+            <div><label>Paid To</label><input id="paid_to"></div>
+            <div><label>Bill No</label><input id="bill_no"></div>
+            <div class="full"><label>Notes</label><textarea id="expense_notes" rows="3"></textarea></div>
+          </div>
+          <div class="actions" style="margin-top:16px">
+            <button class="btn btn-primary" onclick="saveExpense()">Save Expense</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Paid To</th><th>Bill No</th><th>Action</th></tr></thead>
+              <tbody id="expenseTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- DONATIONS -->
+      <section class="page" id="donations">
+        <div class="card">
+          <div class="panel-title"><div><h3>Donations Register</h3><p>Donation entry and receipt print</p></div></div>
+          <div class="form-grid">
+            <div><label>Date</label><input type="date" id="donation_date"></div>
+            <div><label>Donor Name</label><input id="donor_name"></div>
+            <div><label>Mobile</label><input id="donor_mobile"></div>
+            <div><label>Amount</label><input type="number" id="donation_amount" placeholder="0"></div>
+            <div>
+              <label>Type</label>
+              <select id="donation_type">
+                <option value="Cash">Cash</option>
+                <option value="Online">Online</option>
+                <option value="Cheque">Cheque</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div><label>Receipt No</label><input id="receipt_no" readonly></div>
+            <div class="full"><label>Notes</label><textarea id="donation_notes" rows="3"></textarea></div>
+          </div>
+          <div class="actions" style="margin-top:16px">
+            <button class="btn btn-primary" onclick="saveDonation()">Save Donation</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Receipt</th><th>Donor</th><th>Mobile</th><th>Amount</th><th>Type</th><th>Action</th></tr></thead>
+              <tbody id="donationTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- MILK -->
+      <section class="page" id="milk">
+        <div class="card">
+          <div class="panel-title"><div><h3>Milk Register</h3><p>Daily milk collection records</p></div></div>
+          <div class="form-grid">
+            <div><label>Date</label><input type="date" id="milk_date"></div>
+            <div>
+              <label>Shift</label>
+              <select id="milk_shift">
+                <option value="Morning">Morning</option>
+                <option value="Evening">Evening</option>
+              </select>
+            </div>
+            <div><label>Liters</label><input type="number" step="0.1" id="milk_liters" placeholder="0"></div>
+            <div class="full"><label>Notes</label><textarea id="milk_notes" rows="3"></textarea></div>
+          </div>
+          <div class="actions" style="margin-top:16px">
+            <button class="btn btn-primary" onclick="saveMilk()">Save Milk Record</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Shift</th><th>Liters</th><th>Notes</th><th>Action</th></tr></thead>
+              <tbody id="milkTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="page" id="reports">
+        <div class="grid">
+          <div class="card">
+            <div class="panel-title"><div><h3>Export Reports</h3><p>Download CSV / Excel compatible files</p></div></div>
+            <div class="quick-grid">
+              <button class="quick-btn" onclick="exportAnimalsCSV()">Export Animals</button>
+              <button class="quick-btn" onclick="exportExpensesCSV()">Export Expenses</button>
+              <button class="quick-btn" onclick="exportDonationsCSV()">Export Donations</button>
+              <button class="quick-btn" onclick="exportMilkCSV()">Export Milk</button>
+              <button class="quick-btn" onclick="exportHealthCSV()">Export Health</button>
+              <button class="quick-btn" onclick="exportHistoryCSV()">Export History</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="panel-title"><div><h3>Quick Summary</h3><p>Useful live numbers</p></div></div>
+            <div class="list-box">
+              <div class="list-item"><span>Total Animals</span><b id="r_animals">0</b></div>
+              <div class="list-item"><span>Total Donations</span><b id="r_donations">₹0</b></div>
+              <div class="list-item"><span>Total Expenses</span><b id="r_expenses">₹0</b></div>
+              <div class="list-item"><span>Total Milk</span><b id="r_milk">0 L</b></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="settings">
+        <div class="card">
+          <div class="panel-title"><div><h3>Software Settings</h3><p>Basic information and help</p></div></div>
+          <div class="form-grid">
+            <div><label>Software Mode</label><input value="Live Shared Cloud Mode" readonly></div>
+            <div><label>Platform</label><input value="Chrome / Mobile / Laptop" readonly></div>
+            <div><label>Database</label><input value="Supabase Connected" readonly></div>
+            <div><label>Current Version</label><input value="V5 Professional Final" readonly></div>
+            <div class="full"><label>Note</label><textarea rows="4" readonly>This software is designed for live gaushala records. Use Register once, then Login from any mobile/laptop using same email & password. All data stays online and syncs across devices.</textarea></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal" id="profileModal">
+  <div class="modal-content">
+    <button class="btn btn-danger close-btn" onclick="closeProfile()">Close</button>
+    <div id="profileContent"></div>
+  </div>
+</div>
+
+<!-- RECEIPT MODAL -->
+<div class="modal" id="receiptModal">
+  <div class="modal-content">
+    <button class="btn btn-danger close-btn" onclick="closeReceipt()">Close</button>
+    <div id="printArea" style="padding-top:20px"></div>
+    <button class="btn btn-primary" style="margin-top:16px" onclick="window.print()">Print Receipt</button>
+  </div>
+</div>
+
+<script>
+  // =========================
+  // SUPABASE
+  // =========================
+  const SUPABASE_URL = "https://bruildxlxzfenocvazpc.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_byB6lfuEJAT519TzFv0WTg_0X_D5lOv";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // =========================
+  // GLOBAL STATE
+  // =========================
+  let mode = "login";
+  let animals = [];
+  let histories = [];
+  let healths = [];
+  let expenses = [];
+  let donations = [];
+  let milks = [];
+
+  // =========================
+  // INIT
+  // =========================
+  document.getElementById("todayDisplay").textContent = new Date().toLocaleDateString("en-GB");
+  document.getElementById("loginTab").onclick = () => switchMode("login");
+  document.getElementById("signupTab").onclick = () => switchMode("signup");
+  document.getElementById("mainAuthBtn").onclick = handleAuth;
+  setTodayDefaults();
+  switchMode("login");
+  checkSession();
+
+  function setTodayDefaults(){
+    const today = new Date().toISOString().split("T")[0];
+    ["history_date","visit_date","expense_date","donation_date","milk_date"].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.value = today;
+    });
+  }
+
+  function switchMode(newMode){
+    mode = newMode;
+    document.getElementById("loginTab").classList.toggle("active", mode==="login");
+    document.getElementById("signupTab").classList.toggle("active", mode==="signup");
+    document.getElementById("mainAuthBtn").textContent = mode==="login" ? "Login" : "Register";
+    showMsg("", "");
+  }
+
+  function showMsg(text,type){
+    const box = document.getElementById("authMsg");
+    box.className = "msg";
+    box.style.display = "none";
+    box.textContent = "";
+    if(!text) return;
+    box.textContent = text;
+    box.classList.add(type);
+    box.style.display = "block";
+  }
+
+  async function handleAuth(){
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const btn = document.getElementById("mainAuthBtn");
+
+    if(!email || !password){
+      showMsg("Please enter email and password","err");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Please wait...";
+
+    try{
+      if(mode === "signup"){
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        if(error) throw error;
+        showMsg("Registration successful. Now login.","ok");
+        switchMode("login");
+      } else {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if(error) throw error;
+        await startApp();
+      }
+    } catch(err){
+      showMsg(err.message || "Something went wrong","err");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = mode==="login" ? "Login" : "Register";
+    }
+  }
+
+  async function logout(){
+    await supabaseClient.auth.signOut();
+    document.getElementById("app").style.display = "none";
+    document.getElementById("authWrap").style.display = "flex";
+  }
+
+  async function checkSession(){
+    const { data } = await supabaseClient.auth.getSession();
+    if(data?.session){
+      startApp();
+    } else {
+      document.getElementById("authWrap").style.display = "flex";
+      document.getElementById("app").style.display = "none";
+    }
+  }
+
+  async function startApp(){
+    document.getElementById("authWrap").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    await refreshAll();
+  }
+
+  function toggleSidebar(open){
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("mobileOverlay");
+    if(open){
+      sidebar.classList.add("open");
+      overlay.classList.add("show");
+    } else {
+      sidebar.classList.remove("open");
+      overlay.classList.remove("show");
+    }
+  }
+
+  function showPage(id, btn){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    updateHeader(id);
+    toggleSidebar(false);
+  }
+
+  function showPageById(id){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+    const target = [...document.querySelectorAll(".nav-btn")].find(b => b.getAttribute("onclick")?.includes(`'${id}'`));
+    if(target) target.classList.add("active");
+    updateHeader(id);
+    toggleSidebar(false);
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  function updateHeader(id){
+    const map = {
+      dashboard:["Dashboard","Overview of gaushala live records"],
+      animals:["Animals Register","Add / edit all animal details"],
+      history:["Animal History","Track every important event"],
+      health:["Health Register","Medicine and treatment records"],
+      expenses:["Expenses / Bills","Track all gaushala expenses"],
+      donations:["Donations Register","Receipts and donation records"],
+      milk:["Milk Register","Daily milk entries"],
+      reports:["Reports / Export","Download CSV and view summary"],
+      settings:["Settings","Software information"]
+    };
+    document.getElementById("pageTitle").textContent = map[id][0];
+    document.getElementById("pageSub").textContent = map[id][1];
+  }
+
+  // =========================
+  // LOAD ALL
+  // =========================
+  async function refreshAll(){
+    await Promise.all([
+      loadAnimals(),
+      loadHistory(),
+      loadHealth(),
+      loadExpenses(),
+      loadDonations(),
+      loadMilk()
+    ]);
+    populateAnimalDropdowns();
+    updateStats();
+    generateNextReceiptNo();
+    renderRecentAnimals();
+  }
+
+  // =========================
+  // ANIMALS
+  // =========================
+  async function saveAnimal(){
+    const id = document.getElementById("edit_id").value;
+    const payload = {
+      ear_tag: document.getElementById("ear_tag").value.trim(),
+      animal_name: document.getElementById("animal_name").value.trim(),
+      animal_type: document.getElementById("animal_type").value,
+      gender: document.getElementById("gender").value,
+      age: document.getElementById("age").value.trim(),
+      breed: document.getElementById("breed").value.trim(),
+      color: document.getElementById("color").value.trim(),
+      weight: document.getElementById("weight").value.trim(),
+      status: document.getElementById("status").value,
+      photo_url: document.getElementById("photo_url").value.trim(),
+      notes: document.getElementById("notes").value.trim()
+    };
+
+    if(!payload.ear_tag || !payload.animal_name){
+      alert("Ear tag and animal name are required");
+      return;
+    }
+
+    try{
+      if(id){
+        const { error } = await supabaseClient.from("animals").update(payload).eq("id", id);
+        if(error) throw error;
+        alert("Animal updated successfully");
+      } else {
+        const { error } = await supabaseClient.from("animals").insert([payload]);
+        if(error) throw error;
+        alert("Animal saved successfully");
+      }
+      clearAnimalForm();
+      await loadAnimals();
+      populateAnimalDropdowns();
+      updateStats();
+      renderRecentAnimals();
+    } catch(err){
+      alert("Error: " + err.message);
+    }
+  }
+
+  async function loadAnimals(){
+    const { data, error } = await supabaseClient.from("animals").select("*").order("id",{ascending:false});
+    if(error){ alert("Load Animals Error: " + error.message); return; }
+    animals = data || [];
+    renderAnimals();
+  }
+
+  function renderAnimals(){
+    const tbody = document.getElementById("animalTable");
+    const search = (document.getElementById("searchBox").value || "").toLowerCase();
+    const type = document.getElementById("filterType").value;
+    const status = document.getElementById("filterStatus").value;
+
+    const filtered = animals.filter(a=>{
+      const s = (a.ear_tag||"").toLowerCase().includes(search) ||
+                (a.animal_name||"").toLowerCase().includes(search) ||
+                (a.animal_type||"").toLowerCase().includes(search);
+      const t = !type || a.animal_type === type;
+      const st = !status || a.status === status;
+      return s && t && st;
+    });
+
+    tbody.innerHTML = "";
+    if(filtered.length===0){
+      tbody.innerHTML = `<tr><td colspan="8">No animal records found</td></tr>`;
+      return;
+    }
+
+    filtered.forEach(a=>{
+      const photo = a.photo_url
+        ? `<img src="${a.photo_url}" class="img-thumb" onerror="this.src='https://via.placeholder.com/58?text=No+Img'">`
+        : `<img src="https://via.placeholder.com/58?text=No+Img" class="img-thumb">`;
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${photo}</td>
+          <td>${a.ear_tag||""}</td>
+          <td>
+            <b>${a.animal_name||""}</b>
+            <div class="mini">${a.breed||""}</div>
+          </td>
+          <td>${a.animal_type||""}</td>
+          <td>${a.gender||""}</td>
+          <td>${a.age||""}</td>
+          <td><span class="badge">${a.status||""}</span></td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-soft" onclick="viewAnimalProfile(${a.id})">View</button>
+              <button class="btn btn-success" onclick="editAnimal(${a.id})">Edit</button>
+              <button class="btn btn-danger" onclick="deleteAnimal(${a.id})">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+    });
+  }
+
+  function editAnimal(id){
+    const a = animals.find(x=>x.id===id);
+    if(!a) return;
+    document.getElementById("edit_id").value = a.id || "";
+    document.getElementById("ear_tag").value = a.ear_tag || "";
+    document.getElementById("animal_name").value = a.animal_name || "";
+    document.getElementById("animal_type").value = a.animal_type || "Cow";
+    document.getElementById("gender").value = a.gender || "Female";
+    document.getElementById("age").value = a.age || "";
+    document.getElementById("breed").value = a.breed || "";
+    document.getElementById("color").value = a.color || "";
+    document.getElementById("weight").value = a.weight || "";
+    document.getElementById("status").value = a.status || "Healthy";
+    document.getElementById("photo_url").value = a.photo_url || "";
+    document.getElementById("notes").value = a.notes || "";
+    showPageById("animals");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  async function deleteAnimal(id){
+    if(!confirm("Delete this animal?")) return;
+    const { error } = await supabaseClient.from("animals").delete().eq("id", id);
+    if(error){ alert(error.message); return; }
+    await refreshAll();
+  }
+
+  function clearAnimalForm(){
+    ["edit_id","ear_tag","animal_name","age","breed","color","weight","photo_url","notes"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("animal_type").value = "Cow";
+    document.getElementById("gender").value = "Female";
+    document.getElementById("status").value = "Healthy";
+  }
+
+  function populateAnimalDropdowns(){
+    const options = `<option value="">Select Animal</option>` + animals.map(a=>`<option value="${a.id}">${a.ear_tag} - ${a.animal_name}</option>`).join("");
+    ["history_animal","health_animal"].forEach(id=>{
+      document.getElementById(id).innerHTML = options;
+    });
+  }
+
+  function animalNameById(id){
+    const a = animals.find(x=>String(x.id)===String(id));
+    return a ? `${a.ear_tag} - ${a.animal_name}` : "Unknown";
+  }
+
+  function viewAnimalProfile(id){
+    const a = animals.find(x=>x.id===id);
+    if(!a) return;
+
+    const aHist = histories.filter(h=>String(h.animal_id)===String(id)).slice(0,10);
+    const aHealth = healths.filter(h=>String(h.animal_id)===String(id)).slice(0,10);
+    const photo = a.photo_url
+      ? `<img src="${a.photo_url}" style="width:140px;height:140px;border-radius:20px;object-fit:cover;border:1px solid #ddd" onerror="this.src='https://via.placeholder.com/140?text=No+Img'">`
+      : `<img src="https://via.placeholder.com/140?text=No+Img" style="width:140px;height:140px;border-radius:20px;object-fit:cover;border:1px solid #ddd">`;
+
+    document.getElementById("profileContent").innerHTML = `
+      <div class="panel-title">
+        <div><h3>Animal Profile</h3><p>Full details and recent history</p></div>
+      </div>
+
+      <div class="grid">
+        <div class="card" style="padding:16px">${photo}</div>
+        <div class="card">
+          <div class="form-grid">
+            <div><label>Ear Tag</label><input value="${a.ear_tag||""}" readonly></div>
+            <div><label>Name</label><input value="${a.animal_name||""}" readonly></div>
+            <div><label>Type</label><input value="${a.animal_type||""}" readonly></div>
+            <div><label>Gender</label><input value="${a.gender||""}" readonly></div>
+            <div><label>Age</label><input value="${a.age||""}" readonly></div>
+            <div><label>Breed</label><input value="${a.breed||""}" readonly></div>
+            <div><label>Color</label><input value="${a.color||""}" readonly></div>
+            <div><label>Weight</label><input value="${a.weight||""}" readonly></div>
+            <div><label>Status</label><input value="${a.status||""}" readonly></div>
+            <div class="full"><label>Notes</label><textarea rows="3" readonly>${a.notes||""}</textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:18px">
+        <div class="card">
+          <div class="panel-title"><div><h3>Recent History</h3></div></div>
+          <div class="list-box">
+            ${aHist.length ? aHist.map(h=>`<div class="list-item"><div><b>${h.title||""}</b><div class="mini">${h.entry_date||""}</div></div><div>${h.details||""}</div></div>`).join("") : `<div class="mini">No history found</div>`}
+          </div>
+        </div>
+        <div class="card">
+          <div class="panel-title"><div><h3>Recent Health</h3></div></div>
+          <div class="list-box">
+            ${aHealth.length ? aHealth.map(h=>`<div class="list-item"><div><b>${h.treatment||""}</b><div class="mini">${h.visit_date||""}</div></div><div>${h.medicine||""}</div></div>`).join("") : `<div class="mini">No health records found</div>`}
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("profileModal").style.display = "flex";
+  }
+
+  function closeProfile(){
+    document.getElementById("profileModal").style.display = "none";
+  }
+
+  function renderRecentAnimals(){
+    const box = document.getElementById("recentAnimalsBox");
+    const latest = animals.slice(0,5);
+    box.innerHTML = latest.length ? latest.map(a=>`
+      <div class="list-item">
+        <div>
+          <b>${a.ear_tag} - ${a.animal_name}</b>
+          <div class="mini">${a.animal_type} • ${a.status}</div>
+        </div>
+        <button class="btn btn-soft" onclick="viewAnimalProfile(${a.id})">View</button>
+      </div>
+    `).join("") : `<div class="mini">No animals yet</div>`;
+  }
+
+  // =========================
+  // HISTORY
+  // =========================
+  async function saveHistory(){
+    const payload = {
+      animal_id: document.getElementById("history_animal").value || null,
+      entry_date: document.getElementById("history_date").value,
+      title: document.getElementById("history_title").value.trim(),
+      details: document.getElementById("history_details").value.trim()
+    };
+    if(!payload.animal_id || !payload.title){ alert("Select animal and title"); return; }
+    const { error } = await supabaseClient.from("animal_history").insert([payload]);
+    if(error){ alert(error.message); return; }
+    document.getElementById("history_title").value="";
+    document.getElementById("history_details").value="";
+    await loadHistory();
+  }
+
+  async function loadHistory(){
+    const { data, error } = await supabaseClient.from("animal_history").select("*").order("id",{ascending:false});
+    if(error){ alert("History Error: "+error.message); return; }
+    histories = data || [];
+    renderHistory();
+  }
+
+  function renderHistory(){
+    const tbody = document.getElementById("historyTable");
+    tbody.innerHTML = histories.length ? histories.map(h=>`
+      <tr>
+        <td>${h.entry_date||""}</td>
+        <td>${animalNameById(h.animal_id)}</td>
+        <td>${h.title||""}</td>
+        <td>${h.details||""}</td>
+        <td><button class="btn btn-danger" onclick="deleteRow('animal_history', ${h.id}, loadHistory)">Delete</button></td>
+      </tr>
+    `).join("") : `<tr><td colspan="5">No history found</td></tr>`;
+  }
+
+  // =========================
+  // HEALTH
+  // =========================
+  async function saveHealth(){
+    const payload = {
+      animal_id: document.getElementById("health_animal").value || null,
+      visit_date: document.getElementById("visit_date").value,
+      treatment: document.getElementById("treatment").value.trim(),
+      medicine: document.getElementById("medicine").value.trim(),
+      doctor_name: document.getElementById("doctor_name").value.trim(),
+      next_visit: document.getElementById("next_visit").value,
+      notes: document.getElementById("health_notes").value.trim()
+    };
+    if(!payload.animal_id || !payload.treatment){ alert("Select animal and treatment"); return; }
+    const { error } = await supabaseClient.from("health_records").insert([payload]);
+    if(error){ alert(error.message); return; }
+    ["treatment","medicine","doctor_name","next_visit","health_notes"].forEach(id=>document.getElementById(id).value="");
+    await loadHealth();
+  }
+
+  async function loadHealth(){
+    const { data, error } = await supabaseClient.from("health_records").select("*").order("id",{ascending:false});
+    if(error){ alert("Health Error: "+error.message); return; }
+    healths = data || [];
+    renderHealth();
+  }
+
+  function renderHealth(){
+    const tbody = document.getElementById("healthTable");
+    tbody.innerHTML = healths.length ? healths.map(h=>`
+      <tr>
+        <td>${h.visit_date||""}</td>
+        <td>${animalNameById(h.animal_id)}</td>
+        <td>${h.treatment||""}</td>
+        <td>${h.medicine||""}</td>
+        <td>${h.doctor_name||""}</td>
+        <td>${h.next_visit||""}</td>
+        <td><button class="btn btn-danger" onclick="deleteRow('health_records', ${h.id}, loadHealth)">Delete</button></td>
+      </tr>
+    `).join("") : `<tr><td colspan="7">No health records found</td></tr>`;
+  }
+
+  // =========================
+  // EXPENSES
+  // =========================
+  async function saveExpense(){
+    const payload = {
+      expense_date: document.getElementById("expense_date").value,
+      category: document.getElementById("expense_category").value.trim(),
+      amount: Number(document.getElementById("expense_amount").value || 0),
+      paid_to: document.getElementById("paid_to").value.trim(),
+      bill_no: document.getElementById("bill_no").value.trim(),
+      notes: document.getElementById("expense_notes").value.trim()
+    };
+    if(!payload.category || !payload.amount){ alert("Category and amount required"); return; }
+    const { error } = await supabaseClient.from("expenses").insert([payload]);
+    if(error){ alert(error.message); return; }
+    ["expense_category","expense_amount","paid_to","bill_no","expense_notes"].forEach(id=>document.getElementById(id).value="");
+    await loadExpenses();
+    updateStats();
+  }
+
+  async function loadExpenses(){
+    const { data, error } = await supabaseClient.from("expenses").select("*").order("id",{ascending:false});
+    if(error){ alert("Expense Error: "+error.message); return; }
+    expenses = data || [];
+    renderExpenses();
+  }
+
+  function renderExpenses(){
+    const tbody = document.getElementById("expenseTable");
+    tbody.innerHTML = expenses.length ? expenses.map(e=>`
+      <tr>
+        <td>${e.expense_date||""}</td>
+        <td>${e.category||""}</td>
+        <td>₹${Number(e.amount||0).toLocaleString()}</td>
+        <td>${e.paid_to||""}</td>
+        <td>${e.bill_no||""}</td>
+        <td><button class="btn btn-danger" onclick="deleteRow('expenses', ${e.id}, loadExpenses, true)">Delete</button></td>
+      </tr>
+    `).join("") : `<tr><td colspan="6">No expense records found</td></tr>`;
+  }
+
+  // =========================
+  // DONATIONS
+  // =========================
+  function generateNextReceiptNo(){
+    const next = `RCPT-${String((donations?.length || 0) + 1).padStart(4,'0')}`;
+    const el = document.getElementById("receipt_no");
+    if(el) el.value = next;
+  }
+
+  async function saveDonation(){
+    const payload = {
+      donation_date: document.getElementById("donation_date").value,
+      donor_name: document.getElementById("donor_name").value.trim(),
+      mobile: document.getElementById("donor_mobile").value.trim(),
+      amount: Number(document.getElementById("donation_amount").value || 0),
+      donation_type: document.getElementById("donation_type").value,
+      receipt_no: document.getElementById("receipt_no").value,
+      notes: document.getElementById("donation_notes").value.trim()
+    };
+    if(!payload.donor_name || !payload.amount){ alert("Donor name and amount required"); return; }
+    const { error } = await supabaseClient.from("donations").insert([payload]);
+    if(error){ alert(error.message); return; }
+    ["donor_name","donor_mobile","donation_amount","donation_notes"].forEach(id=>document.getElementById(id).value="");
+    await loadDonations();
+    updateStats();
+    generateNextReceiptNo();
+  }
+
+  async function loadDonations(){
+    const { data, error } = await supabaseClient.from("donations").select("*").order("id",{ascending:false});
+    if(error){ alert("Donation Error: "+error.message); return; }
+    donations = data || [];
+    renderDonations();
+  }
+
+  function renderDonations(){
+    const tbody = document.getElementById("donationTable");
+    tbody.innerHTML = donations.length ? donations.map(d=>`
+      <tr>
+        <td>${d.donation_date||""}</td>
+        <td>${d.receipt_no||""}</td>
+        <td>${d.donor_name||""}</td>
+        <td>${d.mobile||""}</td>
+        <td>₹${Number(d.amount||0).toLocaleString()}</td>
+        <td>${d.donation_type||""}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-warning" onclick="printReceipt(${d.id})">Print</button>
+            <button class="btn btn-danger" onclick="deleteRow('donations', ${d.id}, loadDonations, true)">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join("") : `<tr><td colspan="7">No donation records found</td></tr>`;
+  }
+
+  function printReceipt(id){
+    const d = donations.find(x=>x.id===id);
+    if(!d) return;
+    document.getElementById("printArea").innerHTML = `
+      <div style="border:2px dashed #9ca3af;padding:24px;border-radius:18px">
+        <h2 style="text-align:center;font-size:28px;margin-bottom:8px">Donation Receipt</h2>
+        <p style="text-align:center;color:#6b7280;margin-bottom:20px">Gaushala Donation Acknowledgement</p>
+        <hr style="margin:14px 0">
+        <p><b>Receipt No:</b> ${d.receipt_no||""}</p>
+        <p><b>Date:</b> ${d.donation_date||""}</p>
+        <p><b>Donor Name:</b> ${d.donor_name||""}</p>
+        <p><b>Mobile:</b> ${d.mobile||""}</p>
+        <p><b>Amount:</b> ₹${Number(d.amount||0).toLocaleString()}</p>
+        <p><b>Payment Type:</b> ${d.donation_type||""}</p>
+        <p><b>Notes:</b> ${d.notes||"-"}</p>
+        <br><br>
+        <p>Received with thanks for your valuable support.</p>
+        <br><br><br>
+        <div style="display:flex;justify-content:space-between;margin-top:40px">
+          <div>Receiver Signature</div>
+          <div>Authorized Signature</div>
+        </div>
+      </div>
+    `;
+    document.getElementById("receiptModal").style.display = "flex";
+  }
+
+  function closeReceipt(){
+    document.getElementById("receiptModal").style.display = "none";
+  }
+
+  // =========================
+  // MILK
+  // =========================
+  async function saveMilk(){
+    const payload = {
+      record_date: document.getElementById("milk_date").value,
+      shift: document.getElementById("milk_shift").value,
+      liters: Number(document.getElementById("milk_liters").value || 0),
+      notes: document.getElementById("milk_notes").value.trim()
+    };
+    if(!payload.liters){ alert("Enter liters"); return; }
+    const { error } = await supabaseClient.from("milk_records").insert([payload]);
+    if(error){ alert(error.message); return; }
+    ["milk_liters","milk_notes"].forEach(id=>document.getElementById(id).value="");
+    await loadMilk();
+    updateStats();
+  }
+
+  async function loadMilk(){
+    const { data, error } = await supabaseClient.from("milk_records").select("*").order("id",{ascending:false});
+    if(error){ alert("Milk Error: "+error.message); return; }
+    milks = data || [];
+    renderMilk();
+  }
+
+  function renderMilk(){
+    const tbody = document.getElementById("milkTable");
+    tbody.innerHTML = milks.length ? milks.map(m=>`
+      <tr>
+        <td>${m.record_date||""}</td>
+        <td>${m.shift||""}</td>
+        <td>${Number(m.liters||0)} L</td>
+        <td>${m.notes||""}</td>
+        <td><button class="btn btn-danger" onclick="deleteRow('milk_records', ${m.id}, loadMilk, true)">Delete</button></td>
+      </tr>
+    `).join("") : `<tr><td colspan="5">No milk records found</td></tr>`;
+  }
+
+  // =========================
+  // COMMON DELETE
+  // =========================
+  async function deleteRow(table, id, reloadFn, update=false){
+    if(!confirm("Delete this record?")) return;
+    const { error } = await supabaseClient.from(table).delete().eq("id", id);
+    if(error){ alert(error.message); return; }
+    await reloadFn();
+    if(update) updateStats();
+    if(table==="donations") generateNextReceiptNo();
+    if(table==="animals"){ await loadAnimals(); populateAnimalDropdowns(); renderRecentAnimals(); updateStats(); }
+  }
+
+  // =========================
+  // STATS / REPORTS
+  // =========================
+  function updateStats(){
+    const totalAnimals = animals.length;
+    const cows = animals.filter(a=>a.animal_type==="Cow").length;
+    const bulls = animals.filter(a=>a.animal_type==="Bull").length;
+    const calves = animals.filter(a=>a.animal_type==="Calf").length;
+    const totalExpense = expenses.reduce((s,x)=>s+Number(x.amount||0),0);
+    const totalDonation = donations.reduce((s,x)=>s+Number(x.amount||0),0);
+    const totalMilk = milks.reduce((s,x)=>s+Number(x.liters||0),0);
+
+    document.getElementById("totalAnimals").textContent = totalAnimals;
+    document.getElementById("cowCount").textContent = cows;
+    document.getElementById("bullCount").textContent = bulls;
+    document.getElementById("calfCount").textContent = calves;
+    document.getElementById("totalExpense").textContent = "₹" + totalExpense.toLocaleString();
+    document.getElementById("totalDonation").textContent = "₹" + totalDonation.toLocaleString();
+    document.getElementById("totalMilk").textContent = totalMilk + " L";
+
+    document.getElementById("r_animals").textContent = totalAnimals;
+    document.getElementById("r_donations").textContent = "₹" + totalDonation.toLocaleString();
+    document.getElementById("r_expenses").textContent = "₹" + totalExpense.toLocaleString();
+    document.getElementById("r_milk").textContent = totalMilk + " L";
+  }
+
+  // =========================
+  // CSV EXPORT
+  // =========================
+  function downloadCSV(filename, rows){
+    if(!rows.length){ alert("No data to export"); return; }
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.join(","),
+      ...rows.map(r => headers.map(h => `"${String(r[h] ?? "").replace(/"/g,'""')}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  }
+
+  function exportAnimalsCSV(){ downloadCSV("animals.csv", animals); }
+  function exportExpensesCSV(){ downloadCSV("expenses.csv", expenses); }
+  function exportDonationsCSV(){ downloadCSV("donations.csv", donations); }
+  function exportMilkCSV(){ downloadCSV("milk_records.csv", milks); }
+  function exportHealthCSV(){ downloadCSV("health_records.csv", healths); }
+  function exportHistoryCSV(){ downloadCSV("animal_history.csv", histories); }
+</script>
+</body>
+</html>
